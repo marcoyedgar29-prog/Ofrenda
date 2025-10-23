@@ -269,99 +269,117 @@
 		// Función nueva: coloca varias calaveritas pequeñas alrededor del altar
 		function drawMoreSkulls(){
 			const coords = [
-				[10,36], [18,35], [26,34], // lado izquierdo del altar
-				[52,34], [60,36], [68,36]  // lado derecho del altar
+				[10,36],[14,36],[18,35],[22,35],[26,34],
+				[30,33],[34,30],[38,28],[42,28],[46,30],
+				[50,33],[56,34],[60,36],[64,36],[68,36],
+				[74,35],[80,34],[88,36],[94,36]
 			];
-			coords.forEach(([x,y]) => drawMiniSkull(x,y));
+			coords.forEach(([x,y],i) => {
+				if(i % 3 === 0) drawMiniSkull(x,y);
+				else if(i % 3 === 1) drawTinySkull(x,y, (i%2===0)?palette.skullDec:palette.papel1);
+				else drawMiniSkull(x,y);
+			});
 			// algunas en el nivel superior del altar
 			drawMiniSkull(34,26);
 			drawMiniSkull(46,26);
+			// un par sobre el borde frontal
+			drawTinySkull(26,40,palette.papel2);
+			drawTinySkull(66,40,palette.papel3);
 		}
 
-		// --- Nuevo: fotos enmarcadas sobre el altar (pequeñas "polaroids") ---
-		function drawPhotos(){
-			const frames = [
-				{ x: 46, y: 22, color: '#fff6d8' },
-				{ x: 66, y: 22, color: '#fff6d8' },
-				{ x: 56, y: 22, color: '#fff6d8' }
-			];
-			frames.forEach((f, idx) => {
-				// marco
-				rect(f.x-2, f.y-2, 8, 10, '#111'); // sombra
-				rect(f.x-1, f.y-1, 8, 8, f.color);
-				// "foto" simple (pixel portrait)
-				const base = (idx%2===0)? palette.papel3 : palette.papel1;
-				rect(f.x, f.y, 6, 4, base);
-				setPixel(f.x+2, f.y+1, palette.skullDec); // cara/simple detalle
-				setPixel(f.x+3, f.y+1, palette.dark);
-				// nombre/etiqueta abajo
-				hline(f.x, f.y+4, 6, '#f0e6c8');
-				setPixel(f.x+1, f.y+4, palette.dark);
-			});
-		}
-
-		// --- Nuevo: comida y platos ---
-		function drawFood(){
-			// bandeja izquierda: pan + tamales
-			circle(20, 58, 4, '#f7e3c2'); // plato
-			for(let dx=-2; dx<=2; dx++){
-				setPixel(20+dx,58, palette.bread); // panes
-			}
-			// centro: platos con frutas
-			circle(60, 50, 5, '#eae9f5'); // plato blanco
-			for(let i=0;i<6;i++){
-				const ang = i * (Math.PI*2/6);
-				const rx = 60 + Math.round(Math.cos(ang)*3);
-				const ry = 50 + Math.round(Math.sin(ang)*2);
-				setPixel(rx, ry, [palette.fruit1,palette.fruit2,palette.fruit3][i%3]);
-			}
-			// derecha: botella y vaso
-			rect(96,54,3,6,'#2b6b8f'); // botella
-			setPixel(97,53,'#fff5c9');
-			rect(100,56,4,3,'#f0c27a'); // vaso/plato pequeño
-		}
-
-		// --- Nuevo: juguetes (juguete sencillo tipo muñeco/perro) ---
-		function drawToys(){
-			// juguete izquierdo (muñeco)
-			setPixel(12,48,'#ff9ecb'); // cabeza
-			setPixel(12,49,'#ff9ecb');
-			setPixel(11,50,'#ff9ecb'); setPixel(13,50,'#ff9ecb');
-			setPixel(12,51,'#0b3d6b'); // cuerpo detalle
-			// juguete derecho (perrito)
-			setPixel(104,48,'#ffddc4');
-			setPixel(105,48,'#ffddc4');
-			setPixel(103,49,'#ffddc4'); setPixel(106,49,'#ffddc4');
-			setPixel(104,50,' #2f8b3e');
-		}
-
-		// --- Nuevo: guirnalda de luces / adorno en arco ---
-		function drawGarlands(){
-			// arco sobre el altar
-			const y = 30;
-			for(let x=20;x<100;x+=4){
-				const col = (x % 8 === 0) ? palette.papel1 : palette.papel2;
-				setPixel(x, y + Math.round(Math.sin(x/6)), col);
-				setPixel(x+1, y + 1 + Math.round(Math.cos(x/5)), palette.marigold2);
-			}
-		}
-
-		// --- Nuevo: más flores y caminos de cempasúchil ---
-		function drawMoreFlowers(){
-			const path = [[18,62],[24,60],[30,59],[36,58],[42,57],[48,56],[54,55]];
-			path.forEach(([x,y])=>{
-				for(let dx=-1;dx<=1;dx++){
-					for(let dy=-1;dy<=1;dy++){
-						if(Math.abs(dx)+Math.abs(dy)<=2){
-							setPixel(x+dx,y+dy, (Math.random()<0.5)?palette.marigold1:palette.marigold2);
-						}
-					}
+		// Grupo pequeño de velas (clusters) en distintos niveles
+		function drawCandleClusters(){
+			const clusters = [[24,30],[44,30],[68,30],[38,42],[52,42]];
+			clusters.forEach(([cx,cy])=>{
+				for(let i=0;i<3;i++){
+					const x = cx + i - 1;
+					setPixel(x, cy, palette.candle);
+					setPixel(x, cy-1, (Math.random()<0.5)?palette.flame1:palette.flame2);
 				}
 			});
-			// más racimos a los lados
-			[[8,58],[112,58]].forEach(([x,y])=>{
-				for(let i=0;i<6;i++) setPixel(x + (i%2)*2, y - i, palette.marigold1);
-			});
+		}
+
+		// Pequeño esqueleto/figurita decorativa pixelada
+		function drawSkeletonToy(cx,cy){
+			// cabeza y ojos
+			setPixel(cx,cy,'#fff');
+			setPixel(cx-1,cy,'#fff'); setPixel(cx+1,cy,'#fff');
+			setPixel(cx,cy+1,palette.dark); // ojo central/detalle
+			// cuerpo
+			setPixel(cx,cy+2,'#fff');
+			setPixel(cx-1,cy+3,'#fff'); setPixel(cx+1,cy+3,'#fff');
+		}
+
+		// Función nueva: dibuja jarrones simples en los lados del altar
+		function drawVases(){
+			// jarrón izquierdo
+			rect(12,46,4,6,'#8b5a4a'); // cuerpo
+			setPixel(13,45,'#d99f73'); setPixel(14,45,'#d99f73'); // borde
+			// jarrón derecho
+			rect(100,46,4,6,'#8b5a4a');
+			setPixel(101,45,'#d99f73'); setPixel(102,45,'#d99f73');
+			// flores en jarrón izquierdo
+			setPixel(13,44,palette.marigold1); setPixel(14,44,palette.marigold2);
+			// flores en jarrón derecho
+			setPixel(101,44,palette.marigold1); setPixel(102,44,palette.marigold2);
+		}
+
+		// Función nueva: calaveritas aún más pequeñas (detalles de azúcar)
+		function drawTinySkull(cx,cy,accent='#ff9ecb'){
+			// pequeño cráneo => 2px de radio aproximado
+			circle(cx,cy,2,palette.skull);
+			setPixel(cx-1,cy-1,palette.eye);
+			setPixel(cx+1,cy-1,palette.eye);
+			setPixel(cx,cy+1,palette.dark);
+			// toques de color
+			setPixel(cx-1,cy,accent);
+			setPixel(cx+1,cy,accent);
+		}
+
+		// Crear pétalos/hojas en overlay (DOM) para dar movimiento y llenar espacios
+		function createPetals(count = 24){
+			const wrap = document.getElementById('decor');
+			// eliminar viejos
+			Array.from(wrap.querySelectorAll('.petal')).forEach(n=>n.remove());
+			for(let i=0;i<count;i++){
+				const s = document.createElement('span');
+				s.className = 'petal';
+				const left = 5 + Math.random()*90;
+				const top = -20 - Math.random()*40;
+				const size = 6 + Math.random()*8;
+				const colors = [palette.marigold1, palette.marigold2, palette.papel1, palette.papel2];
+				s.style.left = left + '%';
+				s.style.top = top + '%';
+				s.style.width = s.style.height = size + 'px';
+				s.style.background = colors[Math.floor(Math.random()*colors.length)];
+				s.style.opacity = 0.95;
+				s.style.transform = `rotate(${Math.random()*360}deg)`;
+				// timing
+				s.style.animationDelay = (Math.random()*-6) + 's';
+				s.style.animationDuration = (6 + Math.random()*6) + 's';
+				wrap.appendChild(s);
+			}
+		}
+
+		// Crear linternas flotantes simples en overlay (DOM)
+		function createLanterns(count = 6){
+			const wrap = document.getElementById('decor');
+			// limpiar previas
+			Array.from(wrap.querySelectorAll('.lantern')).forEach(n=>n.remove());
+			for(let i=0;i<count;i++){
+				const s = document.createElement('span');
+				s.className = 'lantern';
+				const left = 8 + Math.random()*84;
+				const top = 2 + Math.random()*20;
+				const size = 14 + Math.random()*10;
+				s.style.left = left + '%';
+				s.style.top = top + '%';
+				s.style.width = size + 'px';
+				s.style.height = (size*1.2) + 'px';
+				s.style.background = (i%2===0)?palette.papel3:palette.papel2;
+				s.style.animationDelay = (Math.random()*-8) + 's';
+				wrap.appendChild(s);
+			}
 		}
 
 		// Limpiar y dibujar todo (actualizado para incluir nuevos elementos)
@@ -374,55 +392,27 @@
 			drawMarigolds();
 			drawMoreFlowers();
 			drawCandles();
+			drawCandleClusters(); // <-- nuevas clusters
 			drawSkull();
 			drawMoreSkulls();
+			drawVases();         // <-- jarrones
 			drawOfferings();
 			drawFood();
 			drawPhotos();
+			// juguete pequeño en la esquina
 			drawToys();
+			drawSkeletonToy(58,38);
 			drawDetails();
-		}
-
-		// Escalado visual del canvas (mantiene la resolución lógica)
-		function applyScale(s){
-			canvas.style.width = (W*s) + 'px';
-			canvas.style.height = (H*s) + 'px';
-		}
-
-		// Genera confetti DOM (se llama una vez) y lo deja animando vía CSS
-		function createConfetti(count = 80){
-			const wrap = document.getElementById('decor');
-			wrap.innerHTML = '';
-			for(let i=0;i<count;i++){
-				const s = document.createElement('span');
-				s.className = 'confetti';
-				const left = Math.random()*100;
-				const delay = Math.random()*-10;
-				const dur = 6 + Math.random()*6;
-				const size = 4 + Math.random()*6;
-				const colors = [palette.papel1, palette.papel2, palette.papel3, palette.marigold1, palette.marigold2, palette.fruit1];
-				s.style.left = left + '%';
-				s.style.width = s.style.height = size + 'px';
-				s.style.background = colors[Math.floor(Math.random()*colors.length)];
-				s.style.animationDelay = delay + 's';
-				s.style.animationDuration = dur + 's';
-				wrap.appendChild(s);
-			}
-		}
-
-		// rerender periódico para dar efecto de parpadeo en velas y pequeñas variaciones
-		let _animInterval = null;
-		function startAnimation(){
-			if(_animInterval) clearInterval(_animInterval);
-			_animInterval = setInterval(render, 220);
 		}
 
 		// UI
 		const scaleInput = document.getElementById('scale');
 		document.getElementById('redraw').addEventListener('click', ()=>{ render(); });
 		scaleInput.addEventListener('input', (e)=> applyScale(+e.target.value));
-		// generar confetti y arrancar animación
+		// generar confetti, pétalos y linternas y arrancar animación
 		createConfetti(80);
+		createPetals(28);
+		createLanterns(8);
 		applyScale(+scaleInput.value);
 		render();
 		startAnimation();
