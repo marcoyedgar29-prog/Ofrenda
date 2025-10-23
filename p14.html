@@ -94,18 +94,58 @@
 			return {r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)};
 		}
 
-		// Papel picado en la parte superior
+		// Papel picado en la parte superior (con variedad de formas)
 		function drawPapelPicado(){
 			const top = 4;
+			const shapes = ['diamond','star','scallop','triangle','cross'];
 			for(let i=0;i<8;i++){
 				const x = 4 + i*9;
 				const color = (i%3===0)?palette.papel1: (i%3===1)?palette.papel2:palette.papel3;
 				rect(x,top,8,6,color);
-				// cortes decorativos
-				setPixel(x+2, top+1, palette.dark);
-				setPixel(x+5, top+1, palette.dark);
-				setPixel(x+3, top+3, palette.dark);
-				setPixel(x+4, top+3, palette.dark);
+				// seleccionar tipo de corte según índice para variar las formas
+				const shape = shapes[i % shapes.length];
+
+				// helpers locales para dibujar relativo al rectángulo
+				const px = (ox, oy) => setPixel(x + ox, top + oy, palette.dark);
+				const hpx = (ox, oy, w) => hline(x + ox, top + oy, w, palette.dark);
+
+				if(shape === 'diamond'){
+					// diamante central
+					px(3,0); px(4,0);
+					px(2,1); px(5,1);
+					px(1,2); px(6,2);
+					px(3,2); px(4,2);
+					px(2,3); px(5,3);
+				} else if(shape === 'star'){
+					// cruz con diagonales
+					px(3,1); px(4,1);
+					px(2,2); px(5,2);
+					px(3,2); px(4,2);
+					px(1,3); px(6,3);
+					px(3,3); px(4,3);
+				} else if(shape === 'scallop'){
+					// ondas / semicírculos en borde inferior
+					px(1,3); px(2,4); px(3,4);
+					px(4,4); px(5,4); px(6,3);
+					// pequeñas perforaciones superiores
+					px(3,1); px(4,1);
+				} else if(shape === 'triangle'){
+					// triángulo invertido central
+					px(3,1);
+					hpx(2,2,4);
+					hpx(1,3,6);
+				} else if(shape === 'cross'){
+					// pequeñas cruces y puntos
+					px(2,1); px(5,1);
+					px(3,2); px(4,2);
+					px(2,3); px(5,3);
+					px(3,4); px(4,4);
+				}
+				// pequeños detalles adicionales para variedad
+				if(i % 2 === 0){
+					// añadir un punto en esquina superior interna ocasionalmente
+					setPixel(x+1, top+1, palette.dark);
+				}
 			}
 		}
 
