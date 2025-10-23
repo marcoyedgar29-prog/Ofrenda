@@ -1,6 +1,4 @@
-/* Overlay y partículas */
-.canvas-wrap { /* refuerzo por si alguien limpia inline styles */ position:relative; overflow:hidden; }
-
+/* Overlay básico para partículas y decoraciones */
 .decor-overlay{
 	position:absolute;
 	inset:0;
@@ -9,161 +7,102 @@
 	z-index:6;
 }
 
-/* Confetti: pequeños cuadrados que caen y se balancean */
+/* Confetti: pequeños cuadrados que caen */
 .decor-overlay .confetti{
 	position:absolute;
-	top:-12%;
+	top:-10%;
 	opacity:0.98;
 	border-radius:2px;
-	filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-	transform-origin:center;
 	will-change:transform,opacity;
-	animation-name:confettiFall,confettiSwing,confettiFade;
-	animation-timing-function:linear,ease-in-out,linear;
-	animation-iteration-count:infinite, infinite, 1;
+	animation:confettiFall linear infinite;
+	animation-timing-function: linear;
 }
-
-/* keyframes */
+.decor-overlay .confetti{
+	animation-name:confettiFall;
+}
 @keyframes confettiFall{
-	0%{ transform: translateY(-10vh) rotate(0deg); }
-	100%{ transform: translateY(120vh) rotate(360deg); }
-}
-@keyframes confettiSwing{
-	0%{ transform: translateX(0) rotate(0deg); }
-	50%{ transform: translateX(18px) rotate(20deg); }
-	100%{ transform: translateX(0) rotate(0deg); }
-}
-@keyframes confettiFade{
-	0%{ opacity:1; }
-	85%{ opacity:1; }
-	100%{ opacity:0; transform: translateY(120vh) scale(.8); }
+	0%{ transform: translateY(-10vh) rotate(0deg); opacity:1; }
+	90%{ opacity:1; }
+	100%{ transform: translateY(110vh) rotate(360deg); opacity:0; }
 }
 
-/* Banderín/ Papel picado estilizado sobre el marco (sutil) */
-.canvas-wrap::before{
-	content:"";
-	position:absolute;
-	left:0;
-	right:0;
-	top:4px;
-	height:42px;
-	pointer-events:none;
-	background:
-		repeating-linear-gradient(90deg,
-			#ff2d95 0 12%,
-			#ffd23f 12% 24%,
-			#33d6ff 24% 36%,
-			#ff2d95 36% 48%,
-			#ffd23f 48% 60%,
-			#33d6ff 60% 72%,
-			#ff2d95 72% 84%,
-			#ffd23f 84% 100%);
-	border-bottom-left-radius:10px;
-	border-bottom-right-radius:10px;
-	opacity:0.95;
-	/* cortes decorativos simulados con un gradiente transparente */
-	mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
-	z-index:8;
-}
-
-/* Brillo y halo alrededor del canvas para hacerlo llamativo */
-.canvas-wrap::after{
-	content:"";
-	position:absolute;
-	inset:8px;
-	border-radius:10px;
-	pointer-events:none;
-	box-shadow: 0 0 40px 8px rgba(255,128,200,0.08), 0 0 12px 2px rgba(255,220,100,0.06) inset;
-	animation:halo 3.6s ease-in-out infinite;
-	z-index:5;
-}
-@keyframes halo{
-	0%{ box-shadow: 0 0 18px 4px rgba(255,128,200,0.04); }
-	50%{ box-shadow: 0 0 40px 10px rgba(255,200,60,0.09); }
-	100%{ box-shadow: 0 0 18px 4px rgba(255,128,200,0.04); }
-}
-
-/* Pequeños destellos flotantes */
-.decor-overlay::after{
-	content:"";
-	position:absolute;
-	width:8px;height:8px;
-	right:14%;
-	top:20%;
-	background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.1));
-	filter:blur(6px);
-	opacity:0.14;
-	animation: drift 6s ease-in-out infinite;
-	z-index:7;
-}
-@keyframes drift{
-	0%{ transform:translateY(0) translateX(0); opacity:.12; }
-	50%{ transform:translateY(20px) translateX(-10px); opacity:.28; }
-	100%{ transform:translateY(0) translateX(0); opacity:.12; }
-}
-
-/* Ajustes responsivos (mantener overlay proporcional) */
-@media (max-width:600px){
-	.canvas-wrap::before{ height:28px; top:2px; opacity:0.9; }
-	.decor-overlay .confetti{ width:5px;height:5px; }
-}
-
-/* Opcional: sticker / marco para fotos si decides añadir DOM para fotos */
-.photo-frame{
-	position:absolute;
-	width:72px;height:86px;
-	background:#fff7e6;
-	border:3px solid #111;
-	box-shadow:0 8px 18px rgba(0,0,0,0.45);
-	border-radius:6px;
-	transform:rotate(-4deg);
-	pointer-events:none;
-}
-
-/* Pétalos flotantes (DOM) */
+/* Pétalos/bolitas flotantes */
 .decor-overlay .petal{
 	position:absolute;
+	top:-8%;
 	border-radius:50%;
 	filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-	will-change:transform,opacity;
-	animation:petalFall 8s linear infinite;
+	animation:petalFall linear infinite;
 	opacity:0.95;
-	z-index:7;
 }
 @keyframes petalFall{
 	0%{ transform: translateY(-10vh) rotate(0deg) scale(1); opacity:1; }
-	50%{ transform: translateY(40vh) rotate(180deg) scale(.95); opacity:0.95; }
-	100%{ transform: translateY(120vh) rotate(360deg) scale(.8); opacity:0; }
+	70%{ transform: translateY(50vh) rotate(180deg) scale(.95); opacity:.9; }
+	100%{ transform: translateY(110vh) rotate(360deg) scale(.8); opacity:0; }
 }
 
-/* Linternas DOM (formas simples con luz interior) */
-.decor-overlay .lantern{
-	position:absolute;
-	border-radius:6px;
-	box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 -6px 12px rgba(255,255,255,0.06);
-	opacity:0.98;
-	filter: blur(0.5px);
-	animation:lanternFloat 6s ease-in-out infinite;
-	z-index:6;
-}
-.decor-overlay .lantern::after{
+/* Halo sutil alrededor del canvas (usando .canvas-wrap pseudo) */
+.canvas-wrap::after{
 	content:"";
 	position:absolute;
-	left:50%; top:30%;
-	width:40%; height:40%;
-	transform:translateX(-50%);
-	background: radial-gradient(circle at 40% 30%, rgba(255,255,160,0.95), rgba(255,160,80,0.6));
-	border-radius:50%;
-	opacity:0.9;
-}
-@keyframes lanternFloat{
-	0%{ transform: translateY(0) translateX(0) scale(1); opacity:1; }
-	50%{ transform: translateY(6px) translateX(6px) scale(.98); opacity:0.95; }
-	100%{ transform: translateY(0) translateX(0) scale(1); opacity:1; }
+	inset:6px;
+	border-radius:10px;
+	pointer-events:none;
+	box-shadow: 0 0 28px 6px rgba(255,160,160,0.06), inset 0 0 8px rgba(255,220,120,0.04);
+	z-index:5;
 }
 
-/* ajustar z-index y tamaño en móvil */
+/* Opcional: banderines suaves (simulado) */
+.canvas-wrap::before{
+	content:"";
+	position:absolute;
+	left:0; right:0; top:6px;
+	height:30px;
+	pointer-events:none;
+	background: repeating-linear-gradient(90deg,
+		#ff2d95 0 16%,
+		#ffd23f 16% 32%,
+		#33d6ff 32% 48%);
+	opacity:0.9;
+	mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+	z-index:7;
+}
+
+/* Bombillas para guirnaldas (pequeñas luces) */
+.decor-overlay .bulb{
+	position:absolute;
+	border-radius:50%;
+	transform:translateY(0);
+	/* color se controla en JS vía color, el pseudo-element usará currentColor */
+	color: #ffd23f;
+	pointer-events:none;
+	box-shadow: 0 0 8px rgba(255,200,90,0.7);
+	animation:bulbFloat 3s ease-in-out infinite;
+}
+.decor-overlay .bulb::after{
+	content:"";
+	position:absolute;
+	left:50%; top:50%;
+	transform:translate(-50%,-50%);
+	width:100%; height:100%;
+	border-radius:50%;
+	background:currentColor;
+	box-shadow: 0 0 10px currentColor, 0 0 4px rgba(255,255,255,0.25) inset;
+	opacity:0.95;
+	filter: blur(0.6px);
+}
+@keyframes bulbFloat{
+	0%{ transform: translateY(0); opacity:1; }
+	50%{ transform: translateY(4px); opacity:0.9; }
+	100%{ transform: translateY(0); opacity:1; }
+}
+
+/* Intensificar confetti/petals apariencia */
+.decor-overlay .confetti{ filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25)); }
+.decor-overlay .petal{ filter: drop-shadow(0 3px 3px rgba(0,0,0,0.28)); }
+
+/* Ajustes responsivos */
 @media (max-width:600px){
 	.decor-overlay .petal{ width:5px;height:5px; }
-	.decor-overlay .lantern{ opacity:0.9; transform-origin:center; }
+	.decor-overlay .confetti{ width:5px;height:5px; }
 }
