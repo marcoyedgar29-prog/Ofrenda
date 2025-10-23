@@ -201,6 +201,34 @@
 			setPixel(52,31,palette.candle);
 		}
 
+		// Función nueva: dibuja una calaverita pequeña (mini)
+		function drawMiniSkull(cx,cy){
+			const r = 3;
+			// cráneo
+			circle(cx,cy,r,palette.skull);
+			// ojos pequeños
+			circle(cx-1,cy-1,1,palette.eye);
+			circle(cx+1,cy-1,1,palette.eye);
+			// nariz y boca simplificada
+			setPixel(cx,cy+1,palette.dark);
+			hline(cx-2,cy+2,5,palette.dark);
+			// pequeñas decoraciones
+			setPixel(cx-2,cy-2,palette.skullDec);
+			setPixel(cx+2,cy-2,palette.skullDec);
+		}
+
+		// Función nueva: coloca varias calaveritas pequeñas alrededor del altar
+		function drawMoreSkulls(){
+			const coords = [
+				[10,36], [18,35], [26,34], // lado izquierdo del altar
+				[52,34], [60,36], [68,36]  // lado derecho del altar
+			];
+			coords.forEach(([x,y]) => drawMiniSkull(x,y));
+			// algunas en el nivel superior del altar
+			drawMiniSkull(34,26);
+			drawMiniSkull(46,26);
+		}
+
 		// Limpiar y dibujar todo
 		function render(){
 			// fondo transparente limpiar
@@ -211,6 +239,8 @@
 			drawMarigolds();
 			drawCandles();
 			drawSkull();
+			// Añadimos las calaveritas pequeñas adicionales
+			drawMoreSkulls();
 			drawOfferings();
 			drawDetails();
 		}
