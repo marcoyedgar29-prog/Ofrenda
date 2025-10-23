@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Ofrenda Día de Muertos - Pixel Art</title>
+	<style>
+		:root{
+			--bg:#0b0220;
+		}
+		html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,Segoe UI,Roboto;}
+		.container{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:12px;color:#fff;text-align:center;}
+		.canvas-wrap{background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.5));padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.6);}
+		canvas{display:block;background:transparent;image-rendering:pixelated;border:6px solid rgba(255,255,255,.06);border-radius:6px;}
+		.controls{display:flex;gap:8px;align-items:center;justify-content:center;}
+		label{font-size:13px;opacity:.9}
+		input[type="range"]{width:220px;}
+		.credit{font-size:12px;opacity:.8}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Ofrenda - Pixel Art</h1>
+		<div class="canvas-wrap">
+			<canvas id="pxc"></canvas>
+		</div>
+		<div class="controls">
+			<label for="scale">Escala</label>
+			<input id="scale" type="range" min="4" max="14" value="8">
+			<button id="redraw">Redibujar</button>
+		</div>
+		<div class="credit">Colorida ofrenda pixel art con calavera, velas, flores y papel picado</div>
+	</div>
+
+	<script>
+		// Configuración del "lienzo lógico" (pixel art)
+		const W = 80, H = 60; // resolución lógica (pequeña)
+		const canvas = document.getElementById('pxc');
+		const ctx = canvas.getContext('2d');
+		canvas.width = W;
+		canvas.height = H;
+		ctx.imageSmoothingEnabled = false;
+
+		const palette = {
+			bg1: "#1b0233", bg2: "#2b0b5b",
+			papel1: "#ff2d95", papel2: "#ffd23f", papel3: "#33d6ff",
+			altar: "#6a3b18", altar2: "#c96e1a",
+			marigold1: "#ff9d00", marigold2: "#ffd400",
+			candle: "#fff9cc", flame1: "#ffd23f", flame2: "#ff6b00",
+			skull: "#ffffff", skullDec: "#d44c9c", eye: "#0b3d6b",
+			bread: "#8c4b2f", breadDec:"#d99f73",
+			fruit1:"#ff3864", fruit2:"#4cd97b", fruit3:"#ff8c1a",
+			leaf:"#2f8b3e", dark:"#000000"
+		};
+
+		// Funciones helper
+		function setPixel(x,y,color){ ctx.fillStyle = color; ctx.fillRect(x,y,1,1); }
+		function rect(x,y,w,h,color){ ctx.fillStyle=color; ctx.fillRect(x,y,w,h); }
+		function circle(cx,cy,r,color){
+			ctx.fillStyle = color;
+			for(let y=Math.floor(cy-r); y<=Math.ceil(cy+r); y++){
+				for(let x=Math.floor(cx-r); x<=Math.ceil(cx+r); x++){
+					if((x-cx)*(x-cx)+(y-cy)*(y-cy) <= r*r) ctx.fillRect(x,y,1,1);
+				}
+			}
+		}
+		function hline(x,y,w,color){ rect(x,y,w,1,color); }
+		function vline(x,y,h,color){ rect(x,y,1,h,color); }
+
+		// Dibujar fondo degradado nocturno
+		function drawBackground(){
+			for(let y=0;y<H;y++){
+				const t = y / (H-1);
+				// Mezcla simple entre bg1 y bg2 con toque oscuro
+				const c = lerpColor(palette.bg1, palette.bg2, t);
+				hline(0,y,W,c);
+			}
+		}
+
+		// Mezcla de colores hex (simple)
+		function lerpColor(a,b,t){
+			const pa = hexToRgb(a), pb = hexToRgb(b);
+			const r = Math.round(pa.r + (pb.r-pa.r)*t);
+			const g = Math.round(pa.g + (pb.g-pa.g)*t);
+			const bl = Math.round(pa.b + (pb.b-pa.b)*t);
+			return `rgb(${r},${g},${bl})`;
+		}
+		function hexToRgb(hex){
+			hex = hex.replace('#','');
+			if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+			return {r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)};
+		}
+
+		// Papel picado en la parte superior
+		function drawPapelPicado(){
+			const top = 4;
+			for(let i=0;i<8;i++){
+				const x = 4 + i*9;
+				const color = (i%3===0)?palette.papel1: (i%3===1)?palette.papel2:palette.papel3;
+				rect(x,top,8,6,color);
+				// cortes decorativos
+				setPixel(x+2, top+1, palette.dark);
+				setPixel(x+5, top+1, palette.dark);
+				setPixel(x+3, top+3, palette.dark);
+				setPixel(x+4, top+3, palette.dark);
+			}
+		}
+
+		// Niveles del altar (3 niveles)
+		function drawAltar(){
+			// nivel inferior
+			rect(6, 42, 68, 8, palette.altar);
+			// pie inferior
+			hline(6,41,68,palette.altar2);
+			// nivel medio
+			rect(14,34,52,6,palette.altar2);
+			hline(14,33,52,palette.altar);
+			// nivel superior
+			rect(26,28,28,4,palette.altar);
+			hline(26,27,28,palette.altar2);
+			// suelo / sombra
+			for(let i=0;i<8;i++) hline(0,50+i,W,`rgba(0,0,0,${0.03*i})`);
+		}
+
+		// Marigolds (flores) como pequeñas manchas naranjas alrededor
+		function drawMarigolds(){
+			const clusters = [
+				[10,41],[16,39],[24,38],[36,37],[46,37],[55,37],[64,39]
+			];
+			clusters.forEach(([x,y])=>{
+				for(let dx=-2;dx<=2;dx++){
+					for(let dy=-2;dy<=2;dy++){
+						if(Math.abs(dx)+Math.abs(dy) <=2){
+							const c = (Math.random()<0.6)?palette.marigold1:palette.marigold2;
+							setPixel(x+dx,y+dy,c);
+						}
+					}
+				}
+			});
+		}
+
+		// Velas
+		function drawCandles(){
+			const candleXs = [18,32,40,48,62];
+			candleXs.forEach(x=>{
+				// base de vela
+				for(let h=0; h<5; h++) setPixel(x, 23+h, palette.candle);
+				// mecha
+				setPixel(x,22,palette.dark);
+				// fuego (forma simple)
+				setPixel(x,21, palette.flame1);
+				setPixel(x,20, palette.flame2);
+				setPixel(x-1,21,palette.flame1);
+				setPixel(x+1,21,palette.flame1);
+			});
+		}
+
+		// Calavera central (pixel circle) con decoraciones
+		function drawSkull(){
+			const cx = 40, cy = 18, r = 7;
+			circle(cx,cy,r,palette.skull);
+			// ojos
+			circle(cx-3,cy-1,2,palette.eye);
+			circle(cx+3,cy-1,2,palette.eye);
+			// nariz y boca
+			setPixel(cx,cy+1,palette.dark);
+			hline(cx-3,cy+3,7,palette.dark);
+			// decoraciones
+			for(let i=0;i<6;i++){
+				const a = Math.PI*(i/3);
+				const sx = cx + Math.round(Math.cos(a)*(r+1.2));
+				const sy = cy + Math.round(Math.sin(a)*(r+1.0));
+				setPixel(sx,sy,palette.skullDec);
+			}
+		}
+
+		// Pan de muerto y frutas
+		function drawOfferings(){
+			// pan (a la izquierda)
+			circle(30,33,3,palette.bread);
+			setPixel(30,33,palette.breadDec);
+			// frutas (derecha)
+			circle(50,34,2,palette.fruit1);
+			circle(55,34,2,palette.fruit2);
+			circle(60,34,2,palette.fruit3);
+			// hojas minimalistas
+			setPixel(54,31,palette.leaf);
+			setPixel(58,31,palette.leaf);
+		}
+
+		// Pequeños adornos y sombras
+		function drawDetails(){
+			// brillos sobre altar
+			for(let x=12;x<70;x+=6){
+				setPixel(x,32,palette.altar2);
+				setPixel(x+1,32,palette.altar2);
+			}
+			// pequeñas velas en primer plano (sobre nivel medio)
+			setPixel(22,31,palette.candle);
+			setPixel(36,29,palette.candle);
+			setPixel(52,31,palette.candle);
+		}
+
+		// Limpiar y dibujar todo
+		function render(){
+			// fondo transparente limpiar
+			ctx.clearRect(0,0,W,H);
+			drawBackground();
+			drawPapelPicado();
+			drawAltar();
+			drawMarigolds();
+			drawCandles();
+			drawSkull();
+			drawOfferings();
+			drawDetails();
+		}
+
+		// Escalado visual del canvas (mantiene la resolución lógica)
+		function applyScale(s){
+			canvas.style.width = (W*s) + 'px';
+			canvas.style.height = (H*s) + 'px';
+		}
+
+		// UI
+		const scaleInput = document.getElementById('scale');
+		document.getElementById('redraw').addEventListener('click', ()=>{ render(); });
+		scaleInput.addEventListener('input', (e)=> applyScale(+e.target.value));
+		// render inicial
+		applyScale(+scaleInput.value);
+		render();
+
+		// --- fin de script ---
+	</script>
+</body>
+</html>
