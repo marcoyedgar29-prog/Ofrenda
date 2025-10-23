@@ -85,171 +85,116 @@
 		function hline(x,y,w,color){ rect(x,y,w,1,color); }
 		function vline(x,y,h,color){ rect(x,y,1,h,color); }
 
-		// Restaurado: dibujo original (fondo, papel picado, altar, flores, velas, calavera...)
+		// ---------- Reemplazo: fondo dinámico usando HSL (sustituye la versión previa drawBackground) ----------
+		// helper HSL -> RGB (devuelve objeto {r,g,b})
+		function hslToRgb(h, s, l){
+			s /= 100; l /= 100;
+			const k = n => (n + h/30) % 12;
+			const a = s * Math.min(l, 1 - l);
+			const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+			return { r: Math.round(255 * f(0)), g: Math.round(255 * f(8)), b: Math.round(255 * f(4)) };
+		}
+
+		let _huePhase = 0;
 		function drawBackground(){
+			// dos tonos HSL ligados a la fase para obtener cambio de color
+			const h1 = (_huePhase) % 360;
+			const h2 = (_huePhase + 28) % 360;
+			const c1 = hslToRgb(h1, 65, 8);
+			const c2 = hslToRgb(h2, 65, 18);
 			for(let y=0;y<H;y++){
 				const t = y / (H-1);
-				const c = lerpColor(palette.bg1, palette.bg2, t);
-				hline(0,y,W,c);
-			}
-		}
-		function lerpColor(a,b,t){
-			const pa = hexToRgb(a), pb = hexToRgb(b);
-			const r = Math.round(pa.r + (pb.r-pa.r)*t);
-			const g = Math.round(pa.g + (pb.g-pa.g)*t);
-			const bl = Math.round(pa.b + (pb.b-pa.b)*t);
-			return `rgb(${r},${g},${bl})`;
-		}
-		function hexToRgb(hex){ hex = hex.replace('#',''); if(hex.length===3) hex = hex.split('').map(c=>c+c).join(''); return {r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)}; }
-
-		function drawPapelPicado(){
-			const top = 4;
-			for(let i=0;i<8;i++){
-				const x = 4 + i*9;
-				const color = (i%3===0)?palette.papel1: (i%3===1)?palette.papel2:palette.papel3;
-				rect(x,top,8,6,color);
-				setPixel(x+2, top+1, palette.dark);
-				setPixel(x+5, top+1, palette.dark);
-				setPixel(x+3, top+3, palette.dark);
-				setPixel(x+4, top+3, palette.dark);
+				const r = Math.round(c1.r + (c2.r - c1.r)*t);
+				const g = Math.round(c1.g + (c2.g - c1.g)*t);
+				const b = Math.round(c1.b + (c2.b - c1.b)*t);
+				hline(0,y,W,`rgb(${r},${g},${b})`);
 			}
 		}
 
-		function drawAltar(){
-			rect(6, 42, 68, 8, palette.altar);
-			hline(6,41,68,palette.altar2);
-			rect(14,34,52,6,palette.altar2);
-			hline(14,33,52,palette.altar);
-			rect(26,28,28,4,palette.altar);
-			hline(26,27,28,palette.altar2);
-			for(let i=0;i<8;i++) hline(0,50+i,W,`rgba(0,0,0,${0.03*i})`);
-		}
-
-		function drawMarigolds(){
-			const clusters = [[10,41],[16,39],[24,38],[36,37],[46,37],[55,37],[64,39]];
-			clusters.forEach(([x,y])=>{
-				for(let dx=-2;dx<=2;dx++) for(let dy=-2;dy<=2;dy++) if(Math.abs(dx)+Math.abs(dy)<=2){
-					const c = (Math.random()<0.6)?palette.marigold1:palette.marigold2;
-					setPixel(x+dx,y+dy,c);
-				}
-			});
-		}
-
-		function drawCandles(){
-			const candleXs = [18,32,40,48,62];
-			candleXs.forEach(x=>{
-				for(let h=0; h<5; h++) setPixel(x, 23+h, palette.candle);
-				setPixel(x,22,palette.dark);
-				setPixel(x,21, palette.flame1);
-				setPixel(x,20, palette.flame2);
-				setPixel(x-1,21,palette.flame1);
-				setPixel(x+1,21,palette.flame1);
-			});
-		}
-
-		function drawSkull(){
-			const cx = 40, cy = 18, r = 7;
+		// ---------- Nuevas calaveritas pequeñas ----------
+		function drawMiniSkull(cx,cy,accent){
+			const r = 2;
 			circle(cx,cy,r,palette.skull);
-			circle(cx-3,cy-1,2,palette.eye);
-			circle(cx+3,cy-1,2,palette.eye);
+			setPixel(cx-1,cy-1,palette.eye);
+			setPixel(cx+1,cy-1,palette.eye);
 			setPixel(cx,cy+1,palette.dark);
-			hline(cx-3,cy+3,7,palette.dark);
-			for(let i=0;i<6;i++){
-				const a = Math.PI*(i/3);
-				const sx = cx + Math.round(Math.cos(a)*(r+1.2));
-				const sy = cy + Math.round(Math.sin(a)*(r+1.0));
-				setPixel(sx,sy,palette.skullDec);
-			}
+			if(accent) setPixel(cx,cy-1,accent);
+		}
+		function drawTinySkull(cx,cy,accent){
+			setPixel(cx,cy,palette.skull);
+			setPixel(cx-1,cy,palette.skull);
+			setPixel(cx,cy-1,palette.eye);
+			if(accent) setPixel(cx-1,cy-1,accent);
 		}
 
-		function drawOfferings(){
-			circle(30,33,3,palette.bread);
-			setPixel(30,33,palette.breadDec);
-			circle(50,34,2,palette.fruit1);
-			circle(55,34,2,palette.fruit2);
-			circle(60,34,2,palette.fruit3);
-			setPixel(54,31,palette.leaf);
-			setPixel(58,31,palette.leaf);
-		}
-
-		function drawDetails(){
-			for(let x=12;x<70;x+=6){
-				setPixel(x,32,palette.altar2);
-				setPixel(x+1,32,palette.altar2);
-			}
-			setPixel(22,31,palette.candle);
-			setPixel(36,29,palette.candle);
-			setPixel(52,31,palette.candle);
-		}
-
-		// --- Nuevo: pinta un campo denso de cempasúchil en la zona baja del lienzo ---
-		function drawMarigoldField(density = 0.12){
-			// dibuja muchas manchas pequeñas en la zona frontal/suelo (por debajo de y=46)
-			for(let x = 2; x < W-2; x += 2){
-				for(let y = 46; y < H-2; y += 2){
-					if(Math.random() < density){
-						// pequeña mancha/clúster alrededor del punto
-						const baseX = x + (Math.random()*3 - 1.5) | 0;
-						const baseY = y + (Math.random()*2 - 1) | 0;
-						const col = (Math.random() < 0.65) ? palette.marigold1 : palette.marigold2;
-						for(let dx = -1; dx <= 1; dx++){
-							for(let dy = -1; dy <= 1; dy++){
-								if(Math.abs(dx) + Math.abs(dy) <= 2){
-									// evita dibujar encima del borde del canvas
-									const px = baseX + dx, py = baseY + dy;
-									if(px > 0 && px < W-1 && py > 44 && py < H-1) setPixel(px, py, col);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// --- Nuevo: crear "bombillas" para guirnaldas en overlay ---
-		function createStringLights(count = 14){
-			const wrap = document.getElementById('decor');
-			// eliminar previas
-			Array.from(wrap.querySelectorAll('.bulb')).forEach(n=>n.remove());
+		// ---------- Calaveritas en el fondo (cielo) ----------
+		const bgSkulls = [];
+		function populateBackgroundSkulls(count = 20){
+			bgSkulls.length = 0;
 			for(let i=0;i<count;i++){
-				const b = document.createElement('span');
-				b.className = 'bulb';
-				// distribuir en arco encima del altar
-				const left = 8 + i * (84 / Math.max(1,count-1));
-				const wobble = Math.sin(i/2) * 3;
-				b.style.left = left + '%';
-				b.style.top = (6 + Math.abs(wobble)) + '%';
-				// usar color heredable en pseudo mediante currentColor
-				const colors = [palette.papel1, palette.papel2, palette.papel3, palette.marigold1];
-				const col = colors[Math.floor(Math.random()*colors.length)];
-				b.style.color = col; // pseudo-element usará currentColor
-				b.style.width = (4 + Math.random()*4) + 'px';
-				b.style.height = b.style.width;
-				b.style.animationDelay = (Math.random()*-3) + 's';
-				wrap.appendChild(b);
+				bgSkulls.push({
+					x: 4 + Math.floor(Math.random()*(W-8)),
+					y: 6 + Math.floor(Math.random()*(Math.floor(H*0.45)-6)),
+					size: (Math.random()<0.6)?'mini':'tiny',
+					hueOffset: Math.random()*80 - 40
+				});
 			}
 		}
+		function drawBackgroundSkulls(){
+			bgSkulls.forEach(s=>{
+				const hue = (_huePhase + s.hueOffset + 50) % 360;
+				const colrgb = hslToRgb(hue, 70, 60);
+				const accent = `rgba(${colrgb.r},${colrgb.g},${colrgb.b},0.95)`;
+				if(s.size === 'mini') drawMiniSkull(s.x, s.y, accent);
+				else drawTinySkull(s.x, s.y, accent);
+			});
+		}
 
+		// ---------- Más calaveritas sobre/alrededor del altar ----------
+		function drawMoreSkullsOnAltar(){
+			const coords = [
+				[8,38],[12,37],[16,36],[20,36],[24,35],[28,34],
+				[34,32],[40,30],[46,30],[52,32],[58,34],[64,36],[70,36]
+			];
+			coords.forEach((p,i)=>{
+				if(i % 2 === 0) drawMiniSkull(p[0], p[1], (i%3===0)?palette.skullDec:palette.papel2);
+				else drawTinySkull(p[0], p[1], (i%3===1)?palette.papel1:palette.papel3);
+			});
+			// unos toques sobre ofrendas
+			drawMiniSkull(30,34,palette.papel2);
+			drawMiniSkull(52,35,palette.papel3);
+		}
+
+		// ---------- Animación continua ----------
+		let _lastTS = 0;
+		function animate(ts){
+			if(!_lastTS) _lastTS = ts;
+			const dt = ts - _lastTS;
+			_lastTS = ts;
+			_huePhase = (_huePhase + dt * 0.02) % 360; // velocidad de cambio
+			render();
+			requestAnimationFrame(animate);
+		}
+
+		// ---------- Extender render para incluir calaveritas de fondo y en altar ----------
 		function render(){
 			ctx.clearRect(0,0,W,H);
 			drawBackground();
+			drawBackgroundSkulls(); // calaveritas en el cielo
 			drawPapelPicado();
-			// pintar primero el campo de cempasúchil (queda debajo del altar)
+			// campo de cempasúchil antes del altar
 			drawMarigoldField(0.14);
-			
 			drawAltar();
+			// calaveritas en altar/ofrenda
+			drawMoreSkullsOnAltar();
 			drawMarigolds();
 			drawCandles();
-			drawSkull();
+			drawSkull(); // calavera central
 			drawOfferings();
 			drawDetails();
 		}
 
-		function applyScale(s){
-			canvas.style.width = (W*s) + 'px';
-			canvas.style.height = (H*s) + 'px';
-		}
-
+		// ---------- Inicialización: poblar fondo y arrancar loop ----------
 		// --- Decoración ligera: confetti + pétalos (DOM) ---
 		function createConfetti(count = 36){
 			const wrap = document.getElementById('decor');
@@ -278,6 +223,28 @@
 				wrap.appendChild(e);
 			}
 		}
+		function createStringLights(count = 14){
+			const wrap = document.getElementById('decor');
+			// eliminar previas
+			Array.from(wrap.querySelectorAll('.bulb')).forEach(n=>n.remove());
+			for(let i=0;i<count;i++){
+				const b = document.createElement('span');
+				b.className = 'bulb';
+				// distribuir en arco encima del altar
+				const left = 8 + i * (84 / Math.max(1,count-1));
+				const wobble = Math.sin(i/2) * 3;
+				b.style.left = left + '%';
+				b.style.top = (6 + Math.abs(wobble)) + '%';
+				// usar color heredable en pseudo mediante currentColor
+				const colors = [palette.papel1, palette.papel2, palette.papel3, palette.marigold1];
+				const col = colors[Math.floor(Math.random()*colors.length)];
+				b.style.color = col; // pseudo-element usará currentColor
+				b.style.width = (4 + Math.random()*4) + 'px';
+				b.style.height = b.style.width;
+				b.style.animationDelay = (Math.random()*-3) + 's';
+				wrap.appendChild(b);
+			}
+		}
 
 		// UI
 		const scaleInput = document.getElementById('scale');
@@ -288,7 +255,9 @@
 		createConfetti(60); // más festivo
 		createPetals(26);
 		createStringLights(16);
+		populateBackgroundSkulls(28); // generar posiciones aleatorias
 		applyScale(+scaleInput.value);
+		requestAnimationFrame(animate);
 		render();
 
 	</script>
