@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>Ofrenda Día de Muertos - Pixel Art</title>
-	<link rel="stylesheet" href="decoracion.css">
 	<style>
 		:root{
 			--bg:#0b0220;
@@ -18,6 +17,8 @@
 		input[type="range"]{width:220px;}
 		.credit{font-size:12px;opacity:.8}
 	</style>
+	<!-- cargar CSS externo después del bloque <style> para asegurar que sus reglas se apliquen -->
+	<link rel="stylesheet" href="./decoracion.css">
 </head>
 <body>
 	<div class="container">
@@ -37,7 +38,7 @@
 
 	<script>
 		// Configuración del "lienzo lógico" (pixel art)
-		const W = 80, H = 60; // resolución lógica (pequeña)
+		const W = 120, H = 90; // resolución lógica ampliada para más elementos
 		const canvas = document.getElementById('pxc');
 		const ctx = canvas.getContext('2d');
 		canvas.width = W;
@@ -151,18 +152,20 @@
 
 		// Niveles del altar (3 niveles)
 		function drawAltar(){
-			// nivel inferior
-			rect(6, 42, 68, 8, palette.altar);
-			// pie inferior
-			hline(6,41,68,palette.altar2);
-			// nivel medio
-			rect(14,34,52,6,palette.altar2);
-			hline(14,33,52,palette.altar);
+			// nivel inferior (más ancho)
+			rect(4, 54, 112, 10, palette.altar);
+			hline(4,53,112,palette.altar2);
+			// nivel medio-bajo
+			rect(14,44,92,8,palette.altar2);
+			hline(14,43,92,palette.altar);
+			// nivel medio-alto
+			rect(28,36,64,6,palette.altar);
+			hline(28,35,64,palette.altar2);
 			// nivel superior
-			rect(26,28,28,4,palette.altar);
-			hline(26,27,28,palette.altar2);
+			rect(40,28,40,5,palette.altar2);
+			hline(40,27,40,palette.altar);
 			// suelo / sombra
-			for(let i=0;i<8;i++) hline(0,50+i,W,`rgba(0,0,0,${0.03*i})`);
+			for(let i=0;i<10;i++) hline(0,64+i,W,`rgba(0,0,0,${0.02*i})`);
 		}
 
 		// Marigolds (flores) como pequeñas manchas naranjas alrededor
@@ -275,19 +278,108 @@
 			drawMiniSkull(46,26);
 		}
 
-		// Limpiar y dibujar todo
+		// --- Nuevo: fotos enmarcadas sobre el altar (pequeñas "polaroids") ---
+		function drawPhotos(){
+			const frames = [
+				{ x: 46, y: 22, color: '#fff6d8' },
+				{ x: 66, y: 22, color: '#fff6d8' },
+				{ x: 56, y: 22, color: '#fff6d8' }
+			];
+			frames.forEach((f, idx) => {
+				// marco
+				rect(f.x-2, f.y-2, 8, 10, '#111'); // sombra
+				rect(f.x-1, f.y-1, 8, 8, f.color);
+				// "foto" simple (pixel portrait)
+				const base = (idx%2===0)? palette.papel3 : palette.papel1;
+				rect(f.x, f.y, 6, 4, base);
+				setPixel(f.x+2, f.y+1, palette.skullDec); // cara/simple detalle
+				setPixel(f.x+3, f.y+1, palette.dark);
+				// nombre/etiqueta abajo
+				hline(f.x, f.y+4, 6, '#f0e6c8');
+				setPixel(f.x+1, f.y+4, palette.dark);
+			});
+		}
+
+		// --- Nuevo: comida y platos ---
+		function drawFood(){
+			// bandeja izquierda: pan + tamales
+			circle(20, 58, 4, '#f7e3c2'); // plato
+			for(let dx=-2; dx<=2; dx++){
+				setPixel(20+dx,58, palette.bread); // panes
+			}
+			// centro: platos con frutas
+			circle(60, 50, 5, '#eae9f5'); // plato blanco
+			for(let i=0;i<6;i++){
+				const ang = i * (Math.PI*2/6);
+				const rx = 60 + Math.round(Math.cos(ang)*3);
+				const ry = 50 + Math.round(Math.sin(ang)*2);
+				setPixel(rx, ry, [palette.fruit1,palette.fruit2,palette.fruit3][i%3]);
+			}
+			// derecha: botella y vaso
+			rect(96,54,3,6,'#2b6b8f'); // botella
+			setPixel(97,53,'#fff5c9');
+			rect(100,56,4,3,'#f0c27a'); // vaso/plato pequeño
+		}
+
+		// --- Nuevo: juguetes (juguete sencillo tipo muñeco/perro) ---
+		function drawToys(){
+			// juguete izquierdo (muñeco)
+			setPixel(12,48,'#ff9ecb'); // cabeza
+			setPixel(12,49,'#ff9ecb');
+			setPixel(11,50,'#ff9ecb'); setPixel(13,50,'#ff9ecb');
+			setPixel(12,51,'#0b3d6b'); // cuerpo detalle
+			// juguete derecho (perrito)
+			setPixel(104,48,'#ffddc4');
+			setPixel(105,48,'#ffddc4');
+			setPixel(103,49,'#ffddc4'); setPixel(106,49,'#ffddc4');
+			setPixel(104,50,' #2f8b3e');
+		}
+
+		// --- Nuevo: guirnalda de luces / adorno en arco ---
+		function drawGarlands(){
+			// arco sobre el altar
+			const y = 30;
+			for(let x=20;x<100;x+=4){
+				const col = (x % 8 === 0) ? palette.papel1 : palette.papel2;
+				setPixel(x, y + Math.round(Math.sin(x/6)), col);
+				setPixel(x+1, y + 1 + Math.round(Math.cos(x/5)), palette.marigold2);
+			}
+		}
+
+		// --- Nuevo: más flores y caminos de cempasúchil ---
+		function drawMoreFlowers(){
+			const path = [[18,62],[24,60],[30,59],[36,58],[42,57],[48,56],[54,55]];
+			path.forEach(([x,y])=>{
+				for(let dx=-1;dx<=1;dx++){
+					for(let dy=-1;dy<=1;dy++){
+						if(Math.abs(dx)+Math.abs(dy)<=2){
+							setPixel(x+dx,y+dy, (Math.random()<0.5)?palette.marigold1:palette.marigold2);
+						}
+					}
+				}
+			});
+			// más racimos a los lados
+			[[8,58],[112,58]].forEach(([x,y])=>{
+				for(let i=0;i<6;i++) setPixel(x + (i%2)*2, y - i, palette.marigold1);
+			});
+		}
+
+		// Limpiar y dibujar todo (actualizado para incluir nuevos elementos)
 		function render(){
-			// fondo transparente limpiar
 			ctx.clearRect(0,0,W,H);
 			drawBackground();
 			drawPapelPicado();
+			drawGarlands();
 			drawAltar();
 			drawMarigolds();
+			drawMoreFlowers();
 			drawCandles();
 			drawSkull();
-			// Añadimos las calaveritas pequeñas adicionales
 			drawMoreSkulls();
 			drawOfferings();
+			drawFood();
+			drawPhotos();
+			drawToys();
 			drawDetails();
 		}
 
@@ -298,7 +390,7 @@
 		}
 
 		// Genera confetti DOM (se llama una vez) y lo deja animando vía CSS
-		function createConfetti(count = 36){
+		function createConfetti(count = 80){
 			const wrap = document.getElementById('decor');
 			wrap.innerHTML = '';
 			for(let i=0;i<count;i++){
@@ -330,7 +422,7 @@
 		document.getElementById('redraw').addEventListener('click', ()=>{ render(); });
 		scaleInput.addEventListener('input', (e)=> applyScale(+e.target.value));
 		// generar confetti y arrancar animación
-		createConfetti(36);
+		createConfetti(80);
 		applyScale(+scaleInput.value);
 		render();
 		startAnimation();
