@@ -4,13 +4,14 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>Ofrenda Día de Muertos - Pixel Art</title>
+	<link rel="stylesheet" href="decoracion.css">
 	<style>
 		:root{
 			--bg:#0b0220;
 		}
 		html,body{height:100%;margin:0;background:var(--bg);font-family:system-ui,Segoe UI,Roboto;}
 		.container{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:12px;color:#fff;text-align:center;}
-		.canvas-wrap{background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.5));padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.6);}
+		.canvas-wrap{background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.5));padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.6); position:relative; overflow:hidden;}
 		canvas{display:block;background:transparent;image-rendering:pixelated;border:6px solid rgba(255,255,255,.06);border-radius:6px;}
 		.controls{display:flex;gap:8px;align-items:center;justify-content:center;}
 		label{font-size:13px;opacity:.9}
@@ -23,6 +24,8 @@
 		<h1>Ofrenda - Pixel Art</h1>
 		<div class="canvas-wrap">
 			<canvas id="pxc"></canvas>
+			<!-- overlay para confetti/partículas y decoraciones CSS -->
+			<div class="decor-overlay" id="decor" aria-hidden="true"></div>
 		</div>
 		<div class="controls">
 			<label for="scale">Escala</label>
@@ -139,7 +142,7 @@
 			});
 		}
 
-		// Velas
+		// Velas (modificada para fuego con pequeña variación por render)
 		function drawCandles(){
 			const candleXs = [18,32,40,48,62];
 			candleXs.forEach(x=>{
@@ -147,11 +150,14 @@
 				for(let h=0; h<5; h++) setPixel(x, 23+h, palette.candle);
 				// mecha
 				setPixel(x,22,palette.dark);
-				// fuego (forma simple)
-				setPixel(x,21, palette.flame1);
-				setPixel(x,20, palette.flame2);
-				setPixel(x-1,21,palette.flame1);
-				setPixel(x+1,21,palette.flame1);
+				// fuego con pequeña variación aleatoria para simular parpadeo
+				const flick = Math.random() < 0.5;
+				const flameOffsetY = flick ? 20 : 19;
+				const flameCol = (Math.random()<0.4)?palette.flame2:palette.flame1;
+				setPixel(x,flameOffsetY,flameCol);
+				setPixel(x,flameOffsetY-1,palette.flame1);
+				if(Math.random()<0.6) setPixel(x-1,flameOffsetY,palette.flame1);
+				if(Math.random()<0.6) setPixel(x+1,flameOffsetY,palette.flame1);
 			});
 		}
 
@@ -251,13 +257,43 @@
 			canvas.style.height = (H*s) + 'px';
 		}
 
+		// Genera confetti DOM (se llama una vez) y lo deja animando vía CSS
+		function createConfetti(count = 36){
+			const wrap = document.getElementById('decor');
+			wrap.innerHTML = '';
+			for(let i=0;i<count;i++){
+				const s = document.createElement('span');
+				s.className = 'confetti';
+				const left = Math.random()*100;
+				const delay = Math.random()*-10;
+				const dur = 6 + Math.random()*6;
+				const size = 4 + Math.random()*6;
+				const colors = [palette.papel1, palette.papel2, palette.papel3, palette.marigold1, palette.marigold2, palette.fruit1];
+				s.style.left = left + '%';
+				s.style.width = s.style.height = size + 'px';
+				s.style.background = colors[Math.floor(Math.random()*colors.length)];
+				s.style.animationDelay = delay + 's';
+				s.style.animationDuration = dur + 's';
+				wrap.appendChild(s);
+			}
+		}
+
+		// rerender periódico para dar efecto de parpadeo en velas y pequeñas variaciones
+		let _animInterval = null;
+		function startAnimation(){
+			if(_animInterval) clearInterval(_animInterval);
+			_animInterval = setInterval(render, 220);
+		}
+
 		// UI
 		const scaleInput = document.getElementById('scale');
 		document.getElementById('redraw').addEventListener('click', ()=>{ render(); });
 		scaleInput.addEventListener('input', (e)=> applyScale(+e.target.value));
-		// render inicial
+		// generar confetti y arrancar animación
+		createConfetti(36);
 		applyScale(+scaleInput.value);
 		render();
+		startAnimation();
 
 		// --- fin de script ---
 	</script>
